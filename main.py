@@ -26,6 +26,7 @@ print("2. Loading datasets done")
 
 # 3. Preprocessing
 
+# Each dataset is preocessed by the pipelines' fit and transform functions 
 df_airport = app.fit(df_airport_initial)
 df_airport = app.transform(df_airport_initial)
 print("- Airport data preprocessed")
@@ -46,26 +47,22 @@ df_train_initial = pd.merge(df_airport, df_geographic ,on='runway_stand',how='le
 df_train_initial = pd.merge(df_train_initial, df_weather ,on = 'AOBT_hourly', how='left')
 df_train_initial = pd.merge(df_train_initial, df_aircraft ,on = 'aircraft_model', how='left')
 
-# TAKES A LOT OF TIME
-# df_train_initial.to_csv("Preprocessed_airport_data.csv", index= False)
-
 print('4. Combining datasets done')
 
 # 5. Cleaning the dataset
 df_train = tpp.fit(df_train_initial)
 df_train = tpp.transform(df_train_initial)
 
-print('5. Cleaning the dataset done\n')
+print('5. Cleaning of the dataset done\n')
 
 print(f"Training dataset shape is {df_train.shape}")
 print('\n')
 print(df_train.head())
 
-# Save the dataset TAKES A LOT OF TIME
+# Saving the dataset TAKES A LOT OF TIME
 # df_train_initial.to_csv("Preprocessed_airport_data.csv", index= False)
 
 # 6. Splitting into training and validation datasets
-#Split the dataset into X & y (where y is the variable to predict)
 df_y = df_train['taxitime']
 df_X = df_train.drop(['taxitime'], axis=1)
 

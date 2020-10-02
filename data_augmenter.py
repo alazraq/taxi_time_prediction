@@ -33,7 +33,8 @@ class GeoDataAugmenter(BaseEstimator, TransformerMixin):
 
     def transform(self, x, y=None):
         # Compute the distance in the aircraft dataframe
-        x['distance'] = x.apply(lambda x: distanceInKmBetweenCoordinates(x.Lat_runway, x.Lng_runway, x.Lat_stand, x.Lng_stand), axis =1)
+        x['distance'] = x.apply(lambda x: distanceInKmBetweenCoordinates(x.Lat_runway, x.Lng_runway, 
+                                                                         x.Lat_stand, x.Lng_stand), axis =1)
         x['log_distance'] = np.log(x['distance'])
         x = x[['runway_stand', 'distance', 'log_distance']]
         return x
@@ -47,30 +48,28 @@ class TrainDataAugmenter(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, df_train, y=None):
-        #We can drop the missing values for all the column where they correspond to delete (because less than 1% of the huge dataset)
+        # Drops the missing values for all the column where they correspond to less than 1% of the dataset
         subset_delete = ['Manufacturer', 'Engines', 'Wingspan__ft', 'Length__ft', 'Tail_Height__ft', 
-                        'Wheelbase__ft', 'Wake_Category', 'temperature', 'apparentTemperature', 'dewPoint', 'humidity',
-                        'windSpeed', 'visibility', 'precipType', 'precipAccumulation', 'ozone']
+                        'Wheelbase__ft', 'Wake_Category', 'temperature', 'apparentTemperature', 'dewPoint',
+                         'humidity','windSpeed', 'visibility', 'precipType', 'precipAccumulation', 'ozone']
         df_train = df_train.dropna(subset = subset_delete) 
 
-        #For the remaining NAs value (weather data), 
-        #we are going to use the method fillna assuming that the weather does not change as much from one hour to another
+        # For the remaining NAs value (weather data), 
+        # Uses the method fillna assuming that the weather does not change as much from one hour to another
         df_train = df_train.fillna(method='ffill')
 
-        #From the EDA and the Outliers search for the variable to predict - there seems to be some outliers 
-        # For some outiliers the ATOT is before the AOBT: there is a mistake so we should delete them
-
-        #Delete the taxitime < 0 (we assume that there is a mistake)
+        # For some outliers, the ATOT is before the AOBT: there is a mistake so we delete them
         df_train = df_train[df_train["taxitime"] > 0]
 
 
-        # For the others, we will use Z-score strategy to identify Data point that falls outside of 3 standard deviations 
+        # For the others, we use Z-score strategy and delete points that fall outside of 3 standard deviations 
         z_score = np.abs(stats.zscore(df_train.taxitime))
         threshold = 3
-        print(len(np.where(z_score > 3)[0]))
-
         df_train = df_train[(z_score< 3)]
 
+        # Creates circular hours and several date-related columns
         df_train = date_transfo(df_train)
+        
+        # Removes unrelevant columns
         df_train = df_train.drop(['flight_dt', 'aircraft_model', 'ATOT', 'AOBT_hourly', 'Manufacturer'], axis = 1)
         return df_train

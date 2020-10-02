@@ -34,9 +34,7 @@ class WeatherDataImputer(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, x, y=None):
-        #Convert date string into date format
         x['time_hourly'] =  pd.to_datetime(x['time_hourly'], format='%m/%d/%Y %H:%M')
-        #Rename the columns
         x.rename(columns={'time_hourly':'AOBT_hourly'}, 
                         inplace=True)
         x = x.drop_duplicates()
