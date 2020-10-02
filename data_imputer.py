@@ -39,4 +39,5 @@ class WeatherDataImputer(BaseEstimator, TransformerMixin):
         #Rename the columns
         x.rename(columns={'time_hourly':'AOBT_hourly'}, 
                         inplace=True)
+        x = x.drop_duplicates()
         return x
